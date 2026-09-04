@@ -1,0 +1,35 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+dist/
+*.spec.bak
+
+# Runtime data
+logs/
+*.log
+
+# Local profiles / generated exports
+profiles/*.json
+profiles/*.brgb
+!profiles/.gitkeep
+*.brgb
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+~$*
