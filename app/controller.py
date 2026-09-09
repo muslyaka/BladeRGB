@@ -8,6 +8,9 @@ from blade.device import BladeDevice
 from blade.layout import KEY_GEOMETRY, KEY_OFFSETS, GROUPS
 from engine.colors import hex_to_rgb, rgb_to_hex
 from engine.effects import EFFECTS
+from engine.effect_config import (
+    EFFECT_PARAMETER_SCHEMA, EFFECT_PARAM_DEFAULTS, PALETTE_PRESETS, PALETTE_SIZE
+)
 from engine.layers import Layer, BLEND_MODES, MASK_NAMES
 from engine.renderer import Renderer, BUILTIN_PRESETS
 from app.settings import SettingsStore
@@ -33,11 +36,16 @@ EFFECT_LABELS = {
     "Twinkle": "Мерцание", "Fire": "Огонь", "Ocean": "Океан", "Matrix": "Матрица",
     "Breathing": "Дыхание", "Color Cycle": "Смена цветов", "Screen Ambilight": "Подсветка экрана",
     "Screen Average": "Средний цвет экрана", "Screen Edge": "Цвета по краям экрана",
+    "Neon Flow": "Неоновый поток", "Lava Lamp": "Лава-лампа", "Comet": "Комета",
+    "Pulse Rings": "Пульсирующие кольца", "Dual Wave": "Двойная волна",
 }
 PRESET_LABELS = {
     "Midnight Aurora": "Полуночная аврора", "Cyber Ice": "Киберлёд", "Deep Ocean": "Глубокий океан",
     "Inferno": "Инферно", "Toxic Matrix": "Токсичная матрица", "Sunset Drive": "Закат",
     "Scanner Red": "Красный сканер", "Twinkle Night": "Ночное мерцание", "Screen": "Экран",
+    "Neon River": "Неоновая река", "Calm Lava": "Спокойная лава",
+    "Blue Comet": "Синяя комета", "Soft Rings": "Мягкие кольца",
+    "Crossing Waves": "Пересекающиеся волны",
 }
 AUDIO_LABELS = {"Pulse":"Пульс","Spectrum":"Спектр","Bass Wave":"Басовая волна","VU Bars":"Индикатор уровня","Beat Flash":"Вспышка в бит","Three Band":"Три полосы"}
 REACTIVE_LABELS = {"Ripple":"Волна от нажатия","Glow":"Свечение","Key Flash":"Вспышка клавиши"}
@@ -80,7 +88,7 @@ class BladeController(QObject):
         self._foreground_exe = ""
         self._auto_profile_active = ""
         self._manual_state_before_auto = None
-        self._palette = ["#10002b", "#3c096c", "#7b2cbf", "#c77dff", "#4cc9f0"]
+        self._palette = list(PALETTE_PRESETS["Northern"]["colors"])
         self.renderer.transition_duration = float(self.settings.get("transition_ms", 650)) / 1000.0
         self.hotkeyAction.connect(self.handleHotkey)
         self.hotkeyReceived.connect(self.handleHotkey)
@@ -150,6 +158,15 @@ class BladeController(QObject):
     def layerTypeItems(self): return _ui_items(["Effect", "Static", "Audio", "Reactive"], LAYER_TYPE_LABELS)
     @Property("QVariantList", constant=True)
     def easingItems(self): return _ui_items(EASING_LABELS.keys(), EASING_LABELS)
+    @Property("QVariantList", notify=stateChanged)
+    def effectParameterItems(self):
+        return list(EFFECT_PARAMETER_SCHEMA.get(self.renderer.effect_name, []))
+    @Property("QVariantList", constant=True)
+    def palettePresetItems(self):
+        return [
+            {"value": key, "label": data["label"]}
+            for key, data in PALETTE_PRESETS.items()
+        ]
     @Slot(str, str, result=str)
     def uiLabel(self, category, value): return UI_LABEL_MAPS.get(str(category), {}).get(str(value), str(value))
     @Property("QStringList", notify=profileListChanged)
@@ -252,14 +269,32 @@ class BladeController(QObject):
             self._palette[index]=rgb_to_hex(hex_to_rgb(value)); self.renderer.set_palette([hex_to_rgb(x) for x in self._palette]); self.stateChanged.emit()
         except Exception: pass
     @Slot(str)
+    def applyPalettePreset(self, name):
+        data = PALETTE_PRESETS.get(str(name))
+        if not data: return
+        colors = list(data.get("colors", []))[:PALETTE_SIZE]
+        while len(colors) < PALETTE_SIZE:
+            colors.append(colors[-1] if colors else "#ffffff")
+        self._palette = [rgb_to_hex(hex_to_rgb(x)) for x in colors]
+        self.renderer.set_palette([hex_to_rgb(x) for x in self._palette])
+        self.stateChanged.emit()
+        self.toast.emit("Палитра применена", data.get("label", str(name)))
+    @Slot()
+    def resetEffectParameters(self):
+        for item in EFFECT_PARAMETER_SCHEMA.get(self.renderer.effect_name, []):
+            key = item.get("key")
+            if key in EFFECT_PARAM_DEFAULTS:
+                self.renderer.set_param(key, EFFECT_PARAM_DEFAULTS[key])
+        self.stateChanged.emit()
+    @Slot(str)
     def applyPreset(self, name):
         data=BUILTIN_PRESETS.get(name)
         if not data: return
         self.renderer.begin_transition(); effect=data.get("effect", "Aurora")
         if effect in EFFECTS: self.renderer.set_effect(effect)
         palette=list(data.get("palette", self._palette))
-        while len(palette)<5: palette.append(palette[-1] if palette else "#ffffff")
-        self._palette=palette[:5]; self.renderer.set_palette([hex_to_rgb(x) for x in self._palette])
+        while len(palette)<PALETTE_SIZE: palette.append(palette[-1] if palette else "#ffffff")
+        self._palette=palette[:PALETTE_SIZE]; self.renderer.set_palette([hex_to_rgb(x) for x in self._palette])
         for key,value in data.get("params",{}).items(): self.renderer.set_param(key,value)
         self.stateChanged.emit(); self.toast.emit("Сцена применена", PRESET_LABELS.get(name,name))
 
@@ -359,8 +394,8 @@ class BladeController(QObject):
         effect=data.get("effect","Aurora")
         if effect in EFFECTS: self.renderer.set_effect(effect)
         palette=list(data.get("palette",self._palette))
-        while len(palette)<5: palette.append(palette[-1] if palette else "#ffffff")
-        self._palette=[rgb_to_hex(hex_to_rgb(x)) for x in palette[:5]]; self.renderer.set_palette([hex_to_rgb(x) for x in self._palette])
+        while len(palette)<PALETTE_SIZE: palette.append(palette[-1] if palette else "#ffffff")
+        self._palette=[rgb_to_hex(hex_to_rgb(x)) for x in palette[:PALETTE_SIZE]]; self.renderer.set_palette([hex_to_rgb(x) for x in self._palette])
         for key,value in data.get("params",{}).items(): self.renderer.set_param(key,value)
         reactive=data.get("reactive",{}); self.renderer.reactive_enabled=bool(reactive.get("enabled",True)); self.renderer.reactive_mode=reactive.get("mode","Ripple")
         try: self.renderer.reactive_color=hex_to_rgb(reactive.get("color","#ffffff"))

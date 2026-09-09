@@ -1,2 +1,2 @@
-BladeRGB 1.1.1 RU
-Bugfix: autosave state + reactive color/brightness
+BladeRGB 1.2.0 RU
+Effects Lab: flexible parameters, 8-color palettes and new effects
