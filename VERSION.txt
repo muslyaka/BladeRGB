@@ -1,2 +1,2 @@
-BladeRGB 1.3.0 RU
-RGBW Live Color, themes, accent and compact dashboard
+BladeRGB 1.3.1 RU
+Dashboard layout rebalance and proportional keyboard preview
