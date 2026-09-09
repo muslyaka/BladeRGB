@@ -9,6 +9,8 @@ DEFAULTS = {
     "transition_ms": 650,
     "hotkeys_enabled": True,
     "last_profile": "",
+    "theme": "dark",
+    "accent_color": "#7772C9",
 }
 
 class SettingsStore:
