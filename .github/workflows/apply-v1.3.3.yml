@@ -1,0 +1,42 @@
+name: Apply BladeRGB 1.3.3
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v1.3.3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply BladeRGB 1.3.3 patch
+        run: python tools/apply_v1_3_3.py
+      - name: Validate Python
+        run: python -m compileall -q .
+      - name: Validate QML sanity
+        run: python qml_sanity.py
+      - name: Validate palette timing behavior
+        run: python test_palette_timing.py
+      - name: Commit release
+        shell: bash
+        run: |
+          rm -f tools/apply_v1_3_3.py .github/workflows/apply-v1.3.3.yml
+          rmdir tools 2>/dev/null || true
+          git config user.name "muslyaka"
+          git config user.email "126418299+muslyaka@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "fix: BladeRGB 1.3.3 palette hold behavior"
+          git push
