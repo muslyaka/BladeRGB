@@ -37,3 +37,5 @@ jobs:
           git add -A
           git commit -m "fix: persist lighting state and reactive RGB"
           git push
+
+# retry: 3
