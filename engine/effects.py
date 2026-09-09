@@ -3,6 +3,7 @@ import time
 
 from blade.layout import NORMALIZED_CENTERS
 from .colors import hsv, palette_sample, multiply, clamp01, mix
+from .palette_timing import automatic_palette_phase
 
 
 class Effect:
@@ -44,7 +45,7 @@ class GradientEffect(Effect):
             k: palette_sample(
                 palette,
                 ((x * dx + y * dy) * p["scale"] * repeat)
-                + t * p["speed"] * 0.16
+                + automatic_palette_phase(t * p["speed"] * 0.16, p)
                 + offset,
             )
             for k, (x, y) in NORMALIZED_CENTERS.items()
@@ -183,7 +184,8 @@ class TwinkleEffect(Effect):
             pulse = max(0.0, math.sin((t * speed * 0.9 + phase) * math.pi * 2))
             pulse = pulse ** sharpness
             pulse *= min(1.0, density)
-            base = palette_sample(palette, (x + y + t * speed * 0.04) % 1)
+            color_drift = automatic_palette_phase(t * speed * 0.04, p)
+            base = palette_sample(palette, (x + y + color_drift) % 1)
             star = palette[-1] if palette else (255, 255, 255)
             out[k] = mix(multiply(base, floor), star, pulse)
         return out
@@ -265,7 +267,8 @@ class BreathingEffect(Effect):
         phase = 0.5 + 0.5 * math.sin(t * max(0.05, p["speed"]) * math.pi)
         phase = phase ** curve
         v = minimum + (1.0 - minimum) * phase
-        c = multiply(palette_sample(palette, t * p["speed"] * 0.06), v)
+        color_position = automatic_palette_phase(t * p["speed"] * 0.06, p)
+        c = multiply(palette_sample(palette, color_position), v)
         return {k: c for k in NORMALIZED_CENTERS}
 
 
@@ -274,7 +277,7 @@ class ColorCycleEffect(Effect):
 
     def render(self, t, palette, p):
         softness = max(0.05, p.get("cycle_softness", 1.0))
-        position = t * p["speed"] * 0.08
+        position = automatic_palette_phase(t * p["speed"] * 0.08, p)
         c = palette_sample(palette, position / softness)
         return {k: c for k in NORMALIZED_CENTERS}
 
@@ -293,10 +296,13 @@ class NeonFlowEffect(Effect):
         for k, (x, y) in NORMALIZED_CENTERS.items():
             q = x * dx + y * dy
             bend = math.sin((x + y) * math.pi * 2 * scale + t * speed * 0.55) * 0.12 * twist
-            pos = q * width + bend + t * speed * 0.12
-            ribbon = 0.5 + 0.5 * math.sin(pos * math.pi * 2.0)
+            motion_pos = q * width + bend + t * speed * 0.12
+            color_pos = q * width + bend + automatic_palette_phase(
+                t * speed * 0.12, p
+            )
+            ribbon = 0.5 + 0.5 * math.sin(motion_pos * math.pi * 2.0)
             glow = 0.62 + 0.38 * (ribbon ** 2)
-            out[k] = multiply(palette_sample(palette, pos), glow)
+            out[k] = multiply(palette_sample(palette, color_pos), glow)
         return out
 
 

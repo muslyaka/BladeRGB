@@ -10,6 +10,7 @@ from .effects import EFFECTS
 from .layers import Layer
 from .effect_config import EFFECT_PARAM_DEFAULTS, EXTRA_PRESETS
 from .reactive import ReactiveInput
+from .palette_timing import palette_cycle_position
 DEFAULT_PARAMS = {'speed': 1.0, 'scale': 1.0, 'angle': 25.0, 'brightness': 0.72, 'fps': 30.0, 'reactive_strength': 0.9, 'reactive_decay': 0.85, 'reactive_speed': 0.78, 'audio_gain': 1.25, 'overlay_opacity': 1.0, 'palette_delay': 0.0, 'palette_transition': 0.6}
 BUILTIN_PRESETS = {'Midnight Aurora': {'effect': 'Aurora', 'palette': ['#10002b', '#3c096c', '#7b2cbf', '#c77dff', '#4cc9f0'], 'params': {'speed': 0.72, 'scale': 1.35, 'brightness': 0.74, 'angle': 30}}, 'Cyber Ice': {'effect': 'Plasma', 'palette': ['#001219', '#005f73', '#0a9396', '#94d2bd', '#e9d8a6'], 'params': {'speed': 0.8, 'scale': 1.15, 'brightness': 0.78, 'angle': 10}}, 'Deep Ocean': {'effect': 'Ocean', 'palette': ['#001233', '#023e8a', '#0077b6', '#00b4d8', '#90e0ef'], 'params': {'speed': 0.62, 'scale': 1.2, 'brightness': 0.7, 'angle': 0}}, 'Inferno': {'effect': 'Fire', 'palette': ['#100000', '#5c0000', '#ff3c00', '#ff9e00', '#fff1a8'], 'params': {'speed': 1.15, 'scale': 1.25, 'brightness': 0.85, 'angle': 0}}, 'Toxic Matrix': {'effect': 'Matrix', 'palette': ['#001800', '#007a00', '#39ff14', '#d8ffd0'], 'params': {'speed': 1.15, 'scale': 1, 'brightness': 0.78, 'angle': 90}}, 'Sunset Drive': {'effect': 'Gradient', 'palette': ['#240046', '#7b2cbf', '#ff006e', '#fb5607', '#ffbe0b'], 'params': {'speed': 0.35, 'scale': 1.5, 'brightness': 0.8, 'angle': 18}}, 'Scanner Red': {'effect': 'Scanner', 'palette': ['#120000', '#ff143d'], 'params': {'speed': 1.1, 'scale': 1.1, 'brightness': 0.82, 'angle': 0}}, 'Twinkle Night': {'effect': 'Twinkle', 'palette': ['#080914', '#25184a', '#6d5dfc', '#ffffff'], 'params': {'speed': 0.7, 'scale': 1, 'brightness': 0.7, 'angle': 0}}, 'Screen': {'effect': 'Screen Ambilight', 'palette': ['#ffffff'], 'params': {'speed': 1, 'scale': 1, 'brightness': 0.78, 'angle': 0}}}
 
@@ -222,20 +223,12 @@ class Renderer:
             self._palette_cycle_states[cycle_key] = state
 
         elapsed = max(0.0, float(now) - state["anchor"])
-        segment = hold_time + transition_time
-        step = int(elapsed // segment)
-        local = elapsed - step * segment
-
-        if local < hold_time:
-            blend = 0.0
-        else:
-            blend = (local - hold_time) / transition_time
-            blend = max(0.0, min(1.0, blend))
-            # Smoothstep removes visible speed jumps at both ends.
-            blend = blend * blend * (3.0 - 2.0 * blend)
-
-        index = step % len(palette)
-        next_index = (index + 1) % len(palette)
+        index, next_index, blend = palette_cycle_position(
+            elapsed,
+            len(palette),
+            hold_time,
+            transition_time,
+        )
         current = palette[index:] + palette[:index]
         following = palette[next_index:] + palette[:next_index]
         return [mix(a, b, blend) for a, b in zip(current, following)]

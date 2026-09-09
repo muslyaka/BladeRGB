@@ -1,2 +1,2 @@
-BladeRGB 1.3.2 RU
-Deterministic palette hold/crossfade timing + explicit FPS control
+BladeRGB 1.3.3 RU
+Palette hold fix: single color clock + deterministic timing tests
