@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 DEFAULTS = {
@@ -27,7 +28,21 @@ class SettingsStore:
 
     def save(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8")
+        payload = json.dumps(self.data, ensure_ascii=False, indent=2)
+        temp_path = self.path.with_suffix(self.path.suffix + ".tmp")
+
+        try:
+            with temp_path.open("w", encoding="utf-8", newline="\n") as fh:
+                fh.write(payload)
+                fh.flush()
+                os.fsync(fh.fileno())
+            temp_path.replace(self.path)
+        except Exception:
+            try:
+                temp_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+            self.path.write_text(payload, encoding="utf-8")
 
     def get(self, key, default=None):
         return self.data.get(key, default)

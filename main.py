@@ -1,9 +1,10 @@
+import json
 import logging
 import os
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QUrl, Qt
+from PySide6.QtCore import QTimer, QUrl, Qt
 from PySide6.QtGui import QAction, QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
@@ -57,6 +58,49 @@ def main():
     app.setWindowIcon(icon)
 
     controller = BladeController()
+
+    # Restore the exact last scene, including unsaved slider/palette/reactive
+    # adjustments. If there is no autosaved scene yet, fall back to the last
+    # explicitly loaded named profile.
+    restored_state = controller.settings.get("last_state")
+    if not isinstance(restored_state, dict):
+        last_profile = controller.settings.get("last_profile", "")
+        if last_profile:
+            try:
+                restored_state = controller.profile_store.load(last_profile)
+            except Exception:
+                restored_state = None
+    if isinstance(restored_state, dict):
+        try:
+            controller.apply_state(restored_state)
+        except Exception:
+            logging.exception("Failed to restore last lighting state")
+
+    # Save only when the scene actually changes. Polling also covers future UI
+    # controls without requiring a persistence hook in each setter.
+    last_saved_fingerprint = {"value": None}
+
+    def save_current_scene(force=False):
+        try:
+            state = controller.capture_state()
+            fingerprint = json.dumps(
+                state,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            if force or fingerprint != last_saved_fingerprint["value"]:
+                controller.settings.set("last_state", state)
+                last_saved_fingerprint["value"] = fingerprint
+        except Exception:
+            logging.exception("Failed to autosave lighting state")
+
+    save_current_scene(force=True)
+    autosave_timer = QTimer(app)
+    autosave_timer.setInterval(300)
+    autosave_timer.timeout.connect(save_current_scene)
+    autosave_timer.start()
+
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("controller", controller)
 
@@ -91,6 +135,7 @@ def main():
         window.hide()
 
     def quit_app():
+        save_current_scene(force=True)
         controller.shutdown()
         tray.hide()
         app.quit()
@@ -102,6 +147,7 @@ def main():
     controller.requestShowWindow.connect(show_window)
     controller.requestHideWindow.connect(hide_window)
     controller.requestQuit.connect(quit_app)
+    app.aboutToQuit.connect(lambda: save_current_scene(force=True))
 
     def tray_activated(reason):
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
@@ -113,6 +159,7 @@ def main():
         window.hide()
 
     code = app.exec()
+    save_current_scene(force=True)
     controller.shutdown()
     return code
 

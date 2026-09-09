@@ -204,6 +204,13 @@ Flickable {
                         SectionLabel { text: "Цвет реакции" }
                         Item { Layout.fillWidth: true }
 
+                        Text {
+                            text: controller.reactiveColor.toUpperCase()
+                            color: "#8F95A2"
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                        }
+
                         Rectangle {
                             width: 32
                             height: 28
@@ -214,13 +221,16 @@ Flickable {
 
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: reactiveDialog.open()
+                                onClicked: {
+                                    reactiveDialog.selectedColor = controller.reactiveColor
+                                    reactiveDialog.open()
+                                }
                             }
 
                             ColorDialog {
                                 id: reactiveDialog
                                 title: "Цвет реакции"
-                                selectedColor: controller.reactiveColor
+                                selectedColor: "#ffffff"
                                 onAccepted: controller.setReactiveColor(selectedColor.toString())
                             }
                         }

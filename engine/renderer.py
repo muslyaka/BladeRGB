@@ -219,8 +219,11 @@ class Renderer:
                     colors=self._blend_map(colors,rendered,keys,layer.opacity,layer.blend_mode)
                 if audio_enabled: colors=self._quick_audio_overlay(colors,audio_levels,palette,p['audio_gain'],audio_mode)
                 if overlay_enabled: colors=self._quick_overlay(colors,overlay_key_colors,overlay_keys,overlay_color,p['overlay_opacity'])
-                if reactive_enabled: colors=self.reactive.apply(colors,start,color=reactive_color,strength=p['reactive_strength'],decay=p['reactive_decay'],radius_speed=p['reactive_speed'],mode=reactive_mode)
+                # Global brightness controls the steady scene. Reactive feedback is composited afterwards.
                 br=max(0,min(1,p['brightness'])); final={k:tuple((clamp255(v*br) for v in c)) for k,c in colors.items()}
+                if reactive_enabled:
+                    final=self.reactive.apply(final,start,color=reactive_color,strength=p['reactive_strength'],decay=p['reactive_decay'],radius_speed=p['reactive_speed'],mode=reactive_mode)
+                    final={k:tuple((clamp255(v) for v in c)) for k,c in final.items()}
                 if transition_from is not None and transition_duration>0:
                     alpha=min(1.0,(start-transition_started)/transition_duration); final={k:tuple((clamp255(v) for v in mix(transition_from.get(k,(0,0,0)),final.get(k,(0,0,0)),alpha))) for k in final}
                     if alpha>=1.0:
