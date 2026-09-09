@@ -76,20 +76,12 @@ s = replace_once(s, old, new, "renderer palette cycle math")
 p.write_text(s, encoding="utf-8")
 
 
-# Add deterministic unit-style tests. These run without HID/Qt dependencies.
+# Deterministic unit-style tests. These run without HID/Qt dependencies.
 p = ROOT / "test_palette_timing.py"
 p.write_text(
     '''from engine.palette_timing import (\n    automatic_palette_phase,\n    palette_cycle_position,\n)\n\n\ndef close(a, b, eps=1e-6):\n    assert abs(a - b) <= eps, (a, b)\n\n\n# 2s hold + 1s transition.\ni, n, blend = palette_cycle_position(0.0, 3, 2.0, 1.0)\nassert (i, n) == (0, 1)\nclose(blend, 0.0)\n\ni, n, blend = palette_cycle_position(1.999, 3, 2.0, 1.0)\nassert (i, n) == (0, 1)\nclose(blend, 0.0)\n\ni, n, blend = palette_cycle_position(2.5, 3, 2.0, 1.0)\nassert (i, n) == (0, 1)\nclose(blend, 0.5)\n\ni, n, blend = palette_cycle_position(3.0, 3, 2.0, 1.0)\nassert (i, n) == (1, 2)\nclose(blend, 0.0)\n\ni, n, blend = palette_cycle_position(6.0, 3, 2.0, 1.0)\nassert (i, n) == (2, 0)\nclose(blend, 0.0)\n\n# An enabled palette hold disables a second, effect-local color clock.\nassert automatic_palette_phase(12.5, {"palette_delay": 2.0}) == 0.0\nassert automatic_palette_phase(12.5, {"palette_delay": 0.0}) == 12.5\n\nprint("palette timing tests: OK")\n''',
     encoding="utf-8",
 )
-
-
-# CI should now verify timing behavior, not only syntax.
-p = ROOT / ".github/workflows/check.yml"
-s = p.read_text(encoding="utf-8")
-if "Palette timing tests" not in s:
-    s += '''      - name: Palette timing tests\n        run: python test_palette_timing.py\n'''
-p.write_text(s, encoding="utf-8")
 
 
 # Version/docs.
@@ -101,7 +93,7 @@ p.write_text(s, encoding="utf-8")
 
 p = ROOT / "README.md"
 s = p.read_text(encoding="utf-8")
-notes = '''## 1.3.3 — реальная пауза между цветами\n\n- исправлена главная причина, из-за которой пауза палитры визуально не работала: часть эффектов продолжала самостоятельно прокручивать цвет по времени;\n- при включённой паузе теперь используется один источник тайминга палитры — `пауза → переход → следующий цвет`;\n- убран второй цветовой таймер у Gradient, Twinkle, Breathing, Color Cycle и Neon Flow;\n- движение/геометрия Neon Flow остаются живыми, но смена цвета подчиняется отдельному таймеру палитры;\n- тайминг вынесен в чистый модуль `engine/palette_timing.py`;\n- CI теперь проверяет не только синтаксис, но и реальные контрольные точки паузы/перехода.\n\n'''
+notes = '''## 1.3.3 — реальная пауза между цветами\n\n- исправлена главная причина, из-за которой пауза палитры визуально не работала: часть эффектов продолжала самостоятельно прокручивать цвет по времени;\n- при включённой паузе теперь используется один источник тайминга палитры — `пауза → переход → следующий цвет`;\n- убран второй цветовой таймер у Gradient, Twinkle, Breathing, Color Cycle и Neon Flow;\n- движение/геометрия Neon Flow остаются живыми, но смена цвета подчиняется отдельному таймеру палитры;\n- тайминг вынесен в чистый модуль `engine/palette_timing.py`;\n- добавлены контрольные тесты реальных точек паузы/перехода.\n\n'''
 if "## 1.3.3 —" not in s:
     s = notes + s
 s = s.replace("Текущая версия: **1.3.2 RU**", "Текущая версия: **1.3.3 RU**")
