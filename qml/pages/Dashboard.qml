@@ -205,8 +205,8 @@ Flickable {
 
                     MetricSlider {
                         Layout.fillWidth: true
-                        label: "Частота обновления"
-                        from: 15
+                        label: "FPS (лимит)"
+                        from: 10
                         to: 60
                         stepSize: 1
                         decimals: 0
@@ -226,7 +226,7 @@ Flickable {
 
             Panel {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 410
+                Layout.preferredHeight: 475
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -325,7 +325,7 @@ Flickable {
 
                     MetricSlider {
                         Layout.fillWidth: true
-                        label: "Задержка перехода к следующему цвету"
+                        label: "Пауза на каждом цвете"
                         from: 0
                         to: 8
                         stepSize: 0.1
@@ -333,6 +333,29 @@ Flickable {
                         suffix: " с"
                         value: controller.params.palette_delay || 0
                         onChanged: controller.setParam("palette_delay", value)
+                    }
+
+                    MetricSlider {
+                        Layout.fillWidth: true
+                        label: "Длительность перехода"
+                        from: 0.1
+                        to: 3
+                        stepSize: 0.05
+                        decimals: 2
+                        suffix: " с"
+                        value: controller.params.palette_transition === undefined
+                            ? 0.6
+                            : controller.params.palette_transition
+                        onChanged: controller.setParam("palette_transition", value)
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: controller.params.palette_delay > 0
+                            ? "Цикл: пауза → плавный переход → следующий цвет"
+                            : "0 с — дополнительная задержка палитры отключена"
+                        color: Theme.textSubtle
+                        font.pixelSize: 8
                     }
 
                     RowLayout {
@@ -392,7 +415,7 @@ Flickable {
 
             Panel {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 410
+                Layout.preferredHeight: 475
 
                 ColumnLayout {
                     anchors.fill: parent
