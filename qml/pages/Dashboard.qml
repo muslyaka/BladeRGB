@@ -104,23 +104,9 @@ Flickable {
                     Layout.fillWidth: true
                     spacing: 10
 
-                    Text {
-                        text: "0416:C345"
-                        color: "#616774"
-                        font.pixelSize: 8
-                    }
-
-                    Text {
-                        text: "MI_02"
-                        color: "#616774"
-                        font.pixelSize: 8
-                    }
-
-                    Text {
-                        text: "FF1B:0091"
-                        color: "#616774"
-                        font.pixelSize: 8
-                    }
+                    Text { text: "0416:C345"; color: "#616774"; font.pixelSize: 8 }
+                    Text { text: "MI_02"; color: "#616774"; font.pixelSize: 8 }
+                    Text { text: "FF1B:0091"; color: "#616774"; font.pixelSize: 8 }
 
                     Item { Layout.fillWidth: true }
 
@@ -141,7 +127,7 @@ Flickable {
 
             Panel {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 305
+                Layout.preferredHeight: 385
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -169,11 +155,21 @@ Flickable {
                         }
                     }
 
-                    SectionLabel { text: "Палитра" }
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        SectionLabel { text: "Палитра · 8 цветов" }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            text: "нажмите на цвет для изменения"
+                            color: "#666C78"
+                            font.pixelSize: 8
+                        }
+                    }
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: 6
 
                         Repeater {
                             model: controller.palette
@@ -182,23 +178,52 @@ Flickable {
                                 required property string modelData
                                 required property int index
                                 Layout.fillWidth: true
-                                height: 38
-                                radius: 9
+                                Layout.minimumWidth: 28
+                                height: 36
+                                radius: 8
                                 color: modelData
                                 border.width: 1
                                 border.color: "#3B3F48"
 
                                 MouseArea {
                                     anchors.fill: parent
-                                    onClicked: paletteDialog.open()
+                                    onClicked: {
+                                        paletteDialog.selectedColor = modelData
+                                        paletteDialog.open()
+                                    }
                                 }
 
                                 ColorDialog {
                                     id: paletteDialog
                                     title: "Цвет палитры"
-                                    selectedColor: modelData
+                                    selectedColor: "#ffffff"
                                     onAccepted: controller.setPaletteColor(index, selectedColor.toString())
                                 }
+                            }
+                        }
+                    }
+
+                    SectionLabel { text: "Готовая цветовая гамма" }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        CalmComboBox {
+                            id: palettePresetBox
+                            Layout.fillWidth: true
+                            model: controller.palettePresetItems
+                            textRole: "label"
+                        }
+
+                        AppButton {
+                            text: "Выбрать"
+                            compact: true
+                            onClicked: {
+                                if (palettePresetBox.currentIndex >= 0)
+                                    controller.applyPalettePreset(
+                                        controller.palettePresetItems[palettePresetBox.currentIndex].value
+                                    )
                             }
                         }
                     }
@@ -232,7 +257,7 @@ Flickable {
 
             Panel {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 305
+                Layout.preferredHeight: 385
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -240,7 +265,7 @@ Flickable {
                     spacing: 5
 
                     Text {
-                        text: "Движение и яркость"
+                        text: "Основные параметры"
                         color: "#E4E6EC"
                         font.pixelSize: 14
                         font.weight: Font.DemiBold
@@ -272,7 +297,7 @@ Flickable {
                         from: 0
                         to: 1
                         stepSize: 0.01
-                        value: controller.params.brightness || 0.72
+                        value: controller.params.brightness === undefined ? 0.72 : controller.params.brightness
                         onChanged: controller.setParam("brightness", value)
                     }
 
@@ -298,6 +323,78 @@ Flickable {
                         suffix: " кад/с"
                         value: controller.params.fps || 30
                         onChanged: controller.setParam("fps", value)
+                    }
+                }
+            }
+        }
+
+        Panel {
+            Layout.fillWidth: true
+            Layout.preferredHeight: controller.effectParameterItems.length === 0
+                ? 92
+                : 92 + Math.ceil(controller.effectParameterItems.length / (root.width >= 900 ? 2 : 1)) * 58
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 10
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Column {
+                        spacing: 2
+
+                        Text {
+                            text: "Тонкая настройка эффекта"
+                            color: "#E4E6EC"
+                            font.pixelSize: 14
+                            font.weight: Font.DemiBold
+                        }
+
+                        Text {
+                            text: controller.effectParameterItems.length > 0
+                                ? "Параметры меняются в зависимости от выбранного эффекта"
+                                : "У этого эффекта нет дополнительных параметров"
+                            color: "#777D8A"
+                            font.pixelSize: 9
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    AppButton {
+                        visible: controller.effectParameterItems.length > 0
+                        text: "По умолчанию"
+                        compact: true
+                        onClicked: controller.resetEffectParameters()
+                    }
+                }
+
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: root.width >= 900 ? 2 : 1
+                    columnSpacing: 18
+                    rowSpacing: 4
+                    visible: controller.effectParameterItems.length > 0
+
+                    Repeater {
+                        model: controller.effectParameterItems
+
+                        delegate: MetricSlider {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            label: modelData.label
+                            from: modelData.min
+                            to: modelData.max
+                            stepSize: modelData.step
+                            decimals: modelData.decimals
+                            suffix: modelData.suffix
+                            value: controller.params[modelData.key] === undefined
+                                ? modelData.default
+                                : controller.params[modelData.key]
+                            onChanged: controller.setParam(modelData.key, value)
+                        }
                     }
                 }
             }
