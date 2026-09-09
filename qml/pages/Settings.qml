@@ -10,15 +10,17 @@ Flickable {
     clip: true
     boundsBehavior: Flickable.StopAtBounds
 
+    function indexOfValue(items, value) {
+        for (var i = 0; i < items.length; ++i) if (items[i].value === value) return i
+        return 0
+    }
+
     ColumnLayout {
         id: body
         width: root.width
         spacing: 16
 
-        PageHeader {
-            title: "Настройки"
-            subtitle: "Поведение приложения, автозапуск и диагностика"
-        }
+        PageHeader { title: "Настройки"; subtitle: "Оформление, поведение приложения и диагностика" }
 
         GridLayout {
             Layout.fillWidth: true
@@ -29,249 +31,100 @@ Flickable {
             Panel {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 265
-
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 16
-                    spacing: 13
-
-                    Text {
-                        text: "Поведение приложения"
-                        color: "#E4E6EC"
-                        font.pixelSize: 14
-                        font.weight: Font.DemiBold
+                    spacing: 12
+                    Text { text: "Оформление"; color: Theme.text; font.pixelSize: 14; font.weight: Font.DemiBold }
+                    SectionLabel { text: "Тема приложения" }
+                    CalmComboBox {
+                        Layout.fillWidth: true
+                        model: [{"value":"dark","label":"Тёмная"},{"value":"light","label":"Светлая"}]
+                        textRole: "label"
+                        currentIndex: root.indexOfValue(model, controller.theme)
+                        onActivated: controller.setTheme(model[currentIndex].value)
                     }
-
+                    SectionLabel { text: "Акцентный цвет" }
                     RowLayout {
                         Layout.fillWidth: true
-
-                        Column {
-                            Layout.fillWidth: true
-                            spacing: 2
-
-                            Text {
-                                text: "Сворачивать в трей при закрытии"
-                                color: "#C4C7D0"
-                                font.pixelSize: 11
-                            }
-
-                            Text {
-                                text: "Крестик скрывает окно, подсветка продолжает работать"
-                                color: "#707683"
-                                font.pixelSize: 9
-                            }
-                        }
-
-                        CalmSwitch {
-                            checked: controller.closeToTray
-                            onToggled: controller.setCloseToTray(checked)
-                        }
+                        Rectangle { width: 36; height: 32; radius: 9; color: controller.accentColor; border.width: 1; border.color: Theme.borderStrong }
+                        Text { text: controller.accentColor.toUpperCase(); color: Theme.textSecondary; font.pixelSize: 10; font.weight: Font.DemiBold }
+                        Item { Layout.fillWidth: true }
+                        AppButton { text: "Изменить"; accent: true; compact: true; onClicked: accentPicker.openFor(controller.accentColor) }
+                        RGBWPicker { id: accentPicker; onColorEdited: function(hex) { controller.setAccentColor(hex) } }
                     }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Column {
-                            Layout.fillWidth: true
-                            spacing: 2
-
-                            Text {
-                                text: "Запускать вместе с Windows"
-                                color: "#C4C7D0"
-                                font.pixelSize: 11
-                            }
-
-                            Text {
-                                text: "BladeRGB запускается скрыто в трее"
-                                color: "#707683"
-                                font.pixelSize: 9
-                            }
-                        }
-
-                        CalmSwitch {
-                            checked: controller.autostartEnabled
-                            onToggled: controller.setAutostart(checked)
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Column {
-                            Layout.fillWidth: true
-                            spacing: 2
-
-                            Text {
-                                text: "Глобальные горячие клавиши"
-                                color: "#C4C7D0"
-                                font.pixelSize: 11
-                            }
-
-                            Text {
-                                text: "Работают даже когда окно BladeRGB скрыто"
-                                color: "#707683"
-                                font.pixelSize: 9
-                            }
-                        }
-
-                        CalmSwitch {
-                            checked: controller.hotkeysEnabled
-                            onToggled: controller.setHotkeysEnabled(checked)
-                        }
-                    }
-
-                    Text {
-                        text: "Ctrl+Alt+F9 — запустить / остановить · Ctrl+Alt+F10 — погасить\nCtrl+Alt+F11/F12 — предыдущий / следующий профиль"
-                        color: "#747A87"
-                        font.pixelSize: 9
-                        lineHeight: 1.35
-                    }
+                    Text { Layout.fillWidth: true; wrapMode: Text.WordWrap; text: "Акцент применяется к кнопкам, переключателям, ползункам и активным пунктам меню сразу."; color: Theme.textMuted; font.pixelSize: 9; lineHeight: 1.35 }
+                    Item { Layout.fillHeight: true }
                 }
             }
 
             Panel {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 265
-
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 16
-                    spacing: 11
-
-                    Text {
-                        text: "Переключение сцен"
-                        color: "#E4E6EC"
-                        font.pixelSize: 14
-                        font.weight: Font.DemiBold
-                    }
-
-                    MetricSlider {
+                    spacing: 13
+                    Text { text: "Поведение приложения"; color: Theme.text; font.pixelSize: 14; font.weight: Font.DemiBold }
+                    RowLayout {
                         Layout.fillWidth: true
-                        label: "Плавный переход"
-                        from: 0
-                        to: 2500
-                        stepSize: 50
-                        decimals: 0
-                        suffix: " мс"
-                        value: controller.transitionMs
-                        onChanged: controller.setTransitionMs(Math.round(value))
+                        Column { Layout.fillWidth: true; spacing: 2; Text { text: "Сворачивать в трей при закрытии"; color: Theme.textSecondary; font.pixelSize: 11 }
+Text { text: "Подсветка продолжает работать"; color: Theme.textMuted; font.pixelSize: 9 } }
+                        CalmSwitch { checked: controller.closeToTray; onToggled: controller.setCloseToTray(checked) }
                     }
-
-                    Text {
+                    RowLayout {
                         Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        text: "При смене профиля или готовой сцены BladeRGB плавно смешивает предыдущий и новый RGB-кадр."
-                        color: "#777D8A"
-                        font.pixelSize: 10
-                        lineHeight: 1.4
+                        Column { Layout.fillWidth: true; spacing: 2; Text { text: "Запускать вместе с Windows"; color: Theme.textSecondary; font.pixelSize: 11 }
+Text { text: "Стартует скрыто в трее"; color: Theme.textMuted; font.pixelSize: 9 } }
+                        CalmSwitch { checked: controller.autostartEnabled; onToggled: controller.setAutostart(checked) }
                     }
-
-                    Item { Layout.fillHeight: true }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Column { Layout.fillWidth: true; spacing: 2; Text { text: "Глобальные горячие клавиши"; color: Theme.textSecondary; font.pixelSize: 11 }
+Text { text: "Работают при скрытом окне"; color: Theme.textMuted; font.pixelSize: 9 } }
+                        CalmSwitch { checked: controller.hotkeysEnabled; onToggled: controller.setHotkeysEnabled(checked) }
+                    }
+                    Text { text: "Ctrl+Alt+F9/F10 — RGB · Ctrl+Alt+F11/F12 — профили"; color: Theme.textSubtle; font.pixelSize: 9 }
                 }
             }
 
             Panel {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 225
-
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 16
                     spacing: 10
-
-                    Text {
-                        text: "Клавиатура"
-                        color: "#E4E6EC"
-                        font.pixelSize: 14
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        text: "ARDOR GAMING BLADE"
-                        color: "#D9DBE2"
-                        font.pixelSize: 12
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        text: "VID 0416 · PID C345 · MI_02 · 104 клавиши"
-                        color: "#777D8A"
-                        font.pixelSize: 9
-                    }
-
+                    Text { text: "Переключение сцен"; color: Theme.text; font.pixelSize: 14; font.weight: Font.DemiBold }
+                    MetricSlider { Layout.fillWidth: true; label: "Плавный переход"; from: 0; to: 2500; stepSize: 50; decimals: 0; suffix: " мс"; value: controller.transitionMs; onChanged: controller.setTransitionMs(Math.round(value)) }
+                    Text { Layout.fillWidth: true; wrapMode: Text.WordWrap; text: "При смене профиля BladeRGB плавно смешивает предыдущий и новый RGB-кадр."; color: Theme.textMuted; font.pixelSize: 10; lineHeight: 1.4 }
                     Item { Layout.fillHeight: true }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            text: "Переподключить"
-                            onClicked: controller.connectDevice()
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            text: "Погасить подсветку"
-                            danger: true
-                            onClicked: controller.blackout()
-                        }
-                    }
                 }
             }
 
             Panel {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 225
-
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 16
                     spacing: 9
-
-                    Text {
-                        text: "Диагностика"
-                        color: "#E4E6EC"
-                        font.pixelSize: 14
-                        font.weight: Font.DemiBold
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Text {
-                            text: controller.running ? "Подсветка работает" : "Подсветка остановлена"
-                            color: controller.running ? "#79C8A4" : "#8B909D"
-                            font.pixelSize: 11
-                            font.weight: Font.DemiBold
-                        }
-
-                        Item { Layout.fillWidth: true }
-
-                        Text {
-                            text: controller.actualFps.toFixed(1) + " кад/с"
-                            color: "#8F94A1"
-                            font.pixelSize: 10
-                        }
-                    }
-
+                    Text { text: "Клавиатура и диагностика"; color: Theme.text; font.pixelSize: 14; font.weight: Font.DemiBold }
+                    Text { text: "ARDOR GAMING BLADE · 0416:C345 · MI_02"; color: Theme.textSecondary; font.pixelSize: 10 }
+                    Text { text: controller.running ? "Подсветка работает · " + controller.actualFps.toFixed(1) + " кад/с" : "Подсветка остановлена"; color: controller.running ? Theme.success : Theme.textMuted; font.pixelSize: 10; font.weight: Font.DemiBold }
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         radius: 9
-                        color: "#111318"
+                        color: Theme.input
                         border.width: 1
-                        border.color: "#252933"
-
-                        Text {
-                            anchors.fill: parent
-                            anchors.margins: 11
-                            text: controller.lastError !== "" ? controller.lastError : "Ошибок нет."
-                            color: controller.lastError !== "" ? "#D98191" : "#74BA98"
-                            font.family: "Consolas"
-                            font.pixelSize: 9
-                            wrapMode: Text.WrapAnywhere
-                        }
+                        border.color: Theme.border
+                        Text { anchors.fill: parent; anchors.margins: 10; text: controller.lastError !== "" ? controller.lastError : "Ошибок нет."; color: controller.lastError !== "" ? Theme.danger : Theme.success; font.family: "Consolas"; font.pixelSize: 9; wrapMode: Text.WrapAnywhere }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        AppButton { Layout.fillWidth: true; text: "Переподключить"; onClicked: controller.connectDevice() }
+                        AppButton { Layout.fillWidth: true; text: "Погасить"; danger: true; onClicked: controller.blackout() }
                     }
                 }
             }

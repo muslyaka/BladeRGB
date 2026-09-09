@@ -33,7 +33,7 @@ Item {
 
                 Text {
                     text: "Включена"
-                    color: "#8F95A3"
+                    color: Theme.textMuted
                     font.pixelSize: 10
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -62,14 +62,14 @@ Item {
 
                         Text {
                             text: "Шкала времени"
-                            color: "#E4E6EC"
+                            color: Theme.text
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
 
                         Text {
                             text: (root.anim.keyframes || []).length + " ключевых кадров"
-                            color: "#747A87"
+                            color: Theme.textSubtle
                             font.pixelSize: 9
                         }
                     }
@@ -114,7 +114,7 @@ Item {
                             radius: 8
                             color: modelData.palette && modelData.palette.length
                                 ? modelData.palette[0]
-                                : "#7772C9"
+                                : Theme.accent
                             border.width: 2
                             border.color: "#E7E5F2"
                             x: (Number(modelData.time) / Math.max(0.5, Number(root.anim.duration || 8))) * (parent.width - width)
@@ -157,7 +157,7 @@ Item {
 
                     Text {
                         text: "Воспроизведение"
-                        color: "#E4E6EC"
+                        color: Theme.text
                         font.pixelSize: 14
                         font.weight: Font.DemiBold
                     }
@@ -179,7 +179,7 @@ Item {
 
                         Text {
                             text: "Зациклить"
-                            color: "#A2A7B3"
+                            color: Theme.textSecondary
                             font.pixelSize: 11
                         }
 
@@ -205,7 +205,7 @@ Item {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         text: "Кнопка «Записать текущие» сохраняет скорость, масштаб, яркость, направление и палитру в текущей позиции. Двойной клик по точке удаляет кадр."
-                        color: "#777D8A"
+                        color: Theme.textMuted
                         font.pixelSize: 10
                         lineHeight: 1.4
                     }
@@ -225,7 +225,7 @@ Item {
 
                     Text {
                         text: "Ключевые кадры"
-                        color: "#E4E6EC"
+                        color: Theme.text
                         font.pixelSize: 14
                         font.weight: Font.DemiBold
                     }
@@ -243,9 +243,9 @@ Item {
                             width: ListView.view.width
                             height: 56
                             radius: 10
-                            color: "#1B1E25"
+                            color: Theme.panelAlt
                             border.width: 1
-                            border.color: "#282C35"
+                            border.color: Theme.border
 
                             RowLayout {
                                 anchors.fill: parent
@@ -257,7 +257,7 @@ Item {
                                     radius: 7
                                     color: modelData.palette && modelData.palette.length
                                         ? modelData.palette[0]
-                                        : "#7772C9"
+                                        : Theme.accent
                                 }
 
                                 Column {
@@ -266,14 +266,14 @@ Item {
 
                                     Text {
                                         text: "Кадр " + (index + 1)
-                                        color: "#E8E9EE"
+                                        color: Theme.text
                                         font.pixelSize: 11
                                         font.weight: Font.DemiBold
                                     }
 
                                     Text {
                                         text: Number(modelData.time).toFixed(2) + " с · скорость " + Number(modelData.speed).toFixed(2)
-                                        color: "#747A87"
+                                        color: Theme.textSubtle
                                         font.pixelSize: 9
                                     }
                                 }

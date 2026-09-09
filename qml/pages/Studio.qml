@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Dialogs
 import "../components"
 
 Flickable {
@@ -91,20 +90,22 @@ Flickable {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: brushDialog.open()
+                        onClicked: brushPicker.openFor(root.brush)
                     }
 
-                    ColorDialog {
-                        id: brushDialog
-                        title: "Цвет кисти"
-                        selectedColor: root.brush
-                        onAccepted: root.brush = selectedColor.toString()
+                    RGBWPicker {
+                        id: brushPicker
+                        onColorEdited: function(hex) {
+                            root.brush = hex
+                            for (var key in root.selected)
+                                if (root.selected[key] === true) controller.paintKey(key, hex)
+                        }
                     }
                 }
 
                 Text {
                     text: root.brush.toUpperCase()
-                    color: "#BFC2CB"
+                    color: Theme.textSecondary
                     font.pixelSize: 10
                     font.weight: Font.DemiBold
                 }
@@ -175,7 +176,7 @@ Flickable {
 
                         Text {
                             text: "Реакция на нажатия"
-                            color: "#E4E6EC"
+                            color: Theme.text
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                         }
@@ -206,7 +207,7 @@ Flickable {
 
                         Text {
                             text: controller.reactiveColor.toUpperCase()
-                            color: "#8F95A2"
+                            color: Theme.textMuted
                             font.pixelSize: 10
                             font.weight: Font.DemiBold
                         }
@@ -221,17 +222,12 @@ Flickable {
 
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: {
-                                    reactiveDialog.selectedColor = controller.reactiveColor
-                                    reactiveDialog.open()
-                                }
+                                onClicked: reactivePicker.openFor(controller.reactiveColor)
                             }
 
-                            ColorDialog {
-                                id: reactiveDialog
-                                title: "Цвет реакции"
-                                selectedColor: "#ffffff"
-                                onAccepted: controller.setReactiveColor(selectedColor.toString())
+                            RGBWPicker {
+                                id: reactivePicker
+                                onColorEdited: function(hex) { controller.setReactiveColor(hex) }
                             }
                         }
                     }
@@ -273,7 +269,7 @@ Flickable {
 
                         Text {
                             text: "Реакция на звук"
-                            color: "#E4E6EC"
+                            color: Theme.text
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                         }
@@ -310,7 +306,7 @@ Flickable {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         text: "Подсветка реагирует на системный звук Windows через WASAPI."
-                        color: "#777D8A"
+                        color: Theme.textMuted
                         font.pixelSize: 10
                         lineHeight: 1.35
                     }

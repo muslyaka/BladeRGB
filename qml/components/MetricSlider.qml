@@ -11,20 +11,12 @@ Item {
     property int decimals: 2
     property string suffix: ""
     signal changed(real value)
-
     implicitHeight: 52
 
-    Text {
-        text: root.label
-        color: "#A2A7B3"
-        font.pixelSize: 11
-        anchors.left: parent.left
-        anchors.top: parent.top
-    }
-
+    Text { text: root.label; color: Theme.textSecondary; font.pixelSize: 11; anchors.left: parent.left; anchors.top: parent.top }
     Text {
         text: Number(slider.value).toFixed(root.decimals) + root.suffix
-        color: "#D9DBE2"
+        color: Theme.text
         font.pixelSize: 10
         font.weight: Font.DemiBold
         anchors.right: parent.right
@@ -48,25 +40,23 @@ Item {
             width: slider.availableWidth
             height: 4
             radius: 2
-            color: "#2A2E37"
-
+            color: Theme.border
             Rectangle {
                 width: slider.visualPosition * parent.width
                 height: parent.height
                 radius: 2
-                color: "#7772C9"
+                color: Theme.accent
             }
         }
-
         handle: Rectangle {
             x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
             y: slider.topPadding + slider.availableHeight / 2 - height / 2
             width: 14
             height: 14
             radius: 7
-            color: "#E8E6F5"
+            color: Theme.light ? "#FFFFFF" : "#E8E6F5"
             border.width: 2
-            border.color: "#625E9E"
+            border.color: Theme.accent
         }
     }
 }

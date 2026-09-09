@@ -210,6 +210,10 @@ class BladeController(QObject):
     def hotkeysEnabled(self): return bool(self.settings.get("hotkeys_enabled", True))
     @Property(int, notify=stateChanged)
     def transitionMs(self): return int(self.settings.get("transition_ms", 650))
+    @Property(str, notify=stateChanged)
+    def theme(self): return str(self.settings.get("theme", "dark"))
+    @Property(str, notify=stateChanged)
+    def accentColor(self): return str(self.settings.get("accent_color", "#7772C9"))
 
     def _tick(self):
         try:
@@ -469,6 +473,22 @@ class BladeController(QObject):
     @Slot(int)
     def setTransitionMs(self, value):
         value=max(0,min(2500,int(value))); self.settings.set("transition_ms",value); self.renderer.transition_duration=value/1000.0; self.stateChanged.emit()
+    @Slot(str)
+    def setTheme(self, value):
+        value = str(value).lower()
+        if value not in {"dark", "light"}: return
+        self.settings.set("theme", value); self.stateChanged.emit()
+    @Slot(str)
+    def setAccentColor(self, value):
+        try: color = rgb_to_hex(hex_to_rgb(str(value)))
+        except Exception: return
+        self.settings.set("accent_color", color); self.stateChanged.emit()
+    @Slot(str, result=str)
+    def layerColor(self, layer_id):
+        layer = next((x for x in self.renderer.get_layers() if x.id == layer_id), None)
+        if layer is None: return "#ffffff"
+        try: return rgb_to_hex(tuple(layer.color))
+        except Exception: return "#ffffff"
     def _hotkey_dispatch(self, action): self.hotkeyAction.emit(str(action))
     @Slot(str)
     def handleHotkey(self, action):

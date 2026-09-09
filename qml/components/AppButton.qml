@@ -14,25 +14,23 @@ Button {
     background: Rectangle {
         radius: 9
         color: root.accent
-            ? (root.down ? "#625EAE" : root.hovered ? "#7F79D6" : "#736EC5")
+            ? (root.down ? Theme.accentPressed : root.hovered ? Theme.accentHover : Theme.accent)
             : root.danger
-                ? (root.hovered ? "#2A1D23" : "#211A1E")
-                : (root.hovered ? "#22252D" : "#1D2027")
+                ? (root.hovered ? (Theme.light ? "#FCE8EC" : "#2A1D23") : (Theme.light ? "#FFF3F5" : "#211A1E"))
+                : (root.hovered ? Theme.hover : Theme.input)
         border.width: 1
         border.color: root.accent
-            ? "#8781D8"
+            ? Theme.accentHover
             : root.danger
-                ? "#55303A"
-                : "#2B2F39"
+                ? (Theme.light ? "#E8BAC5" : "#55303A")
+                : Theme.border
 
-        Behavior on color {
-            ColorAnimation { duration: 110 }
-        }
+        Behavior on color { ColorAnimation { duration: 110 } }
     }
 
     contentItem: Text {
         text: root.text
-        color: root.danger ? "#E68A9B" : "#E7E9EF"
+        color: root.danger ? Theme.danger : root.accent ? "#FFFFFF" : Theme.text
         font.pixelSize: 11
         font.weight: Font.DemiBold
         horizontalAlignment: Text.AlignHCenter

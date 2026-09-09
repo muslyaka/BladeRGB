@@ -51,7 +51,7 @@ Item {
 
                     Text {
                         text: "Сохранённые профили"
-                        color: "#E4E6EC"
+                        color: Theme.text
                         font.pixelSize: 14
                         font.weight: Font.DemiBold
                     }
@@ -91,9 +91,9 @@ Item {
                             width: ListView.view.width
                             height: 62
                             radius: 10
-                            color: controller.currentProfile === modelData ? "#22252E" : "#1B1E25"
+                            color: controller.currentProfile === modelData ? "#22252E" : Theme.panelAlt
                             border.width: 1
-                            border.color: controller.currentProfile === modelData ? "#57538B" : "#282C35"
+                            border.color: controller.currentProfile === modelData ? "#57538B" : Theme.border
 
                             RowLayout {
                                 anchors.fill: parent
@@ -104,7 +104,7 @@ Item {
                                     width: 30
                                     height: 30
                                     radius: 8
-                                    color: "#7772C9"
+                                    color: Theme.accent
 
                                     Text {
                                         anchors.centerIn: parent
@@ -121,7 +121,7 @@ Item {
 
                                     Text {
                                         text: modelData
-                                        color: "#E8E9EE"
+                                        color: Theme.text
                                         font.pixelSize: 11
                                         font.weight: Font.DemiBold
                                         elide: Text.ElideRight
@@ -129,7 +129,7 @@ Item {
 
                                     Text {
                                         text: controller.currentProfile === modelData ? "Текущий профиль" : "Пользовательский профиль"
-                                        color: "#747A87"
+                                        color: Theme.textSubtle
                                         font.pixelSize: 8
                                     }
                                 }
@@ -167,7 +167,7 @@ Item {
 
                         Text {
                             text: "Автопереключение"
-                            color: "#E4E6EC"
+                            color: Theme.text
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                         }
@@ -184,9 +184,9 @@ Item {
                         Layout.fillWidth: true
                         height: 58
                         radius: 10
-                        color: "#1B1E25"
+                        color: Theme.panelAlt
                         border.width: 1
-                        border.color: "#282C35"
+                        border.color: Theme.border
 
                         Column {
                             anchors.left: parent.left
@@ -196,13 +196,13 @@ Item {
 
                             Text {
                                 text: "Активное приложение"
-                                color: "#737986"
+                                color: Theme.textSubtle
                                 font.pixelSize: 8
                             }
 
                             Text {
                                 text: controller.foregroundExe
-                                color: "#E2E4EA"
+                                color: Theme.text
                                 font.pixelSize: 11
                                 font.weight: Font.DemiBold
                             }
@@ -241,7 +241,7 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 1
-                        color: "#292D36"
+                        color: Theme.border
                         Layout.topMargin: 2
                         Layout.bottomMargin: 2
                     }
@@ -258,9 +258,9 @@ Item {
                             width: ListView.view.width
                             height: 54
                             radius: 10
-                            color: "#1B1E25"
+                            color: Theme.panelAlt
                             border.width: 1
-                            border.color: "#282C35"
+                            border.color: Theme.border
 
                             RowLayout {
                                 anchors.fill: parent
@@ -272,14 +272,14 @@ Item {
 
                                     Text {
                                         text: modelData.exe
-                                        color: "#E5E7EC"
+                                        color: Theme.text
                                         font.pixelSize: 11
                                         font.weight: Font.DemiBold
                                     }
 
                                     Text {
                                         text: "Профиль: " + modelData.profile
-                                        color: "#747A87"
+                                        color: Theme.textSubtle
                                         font.pixelSize: 9
                                     }
                                 }

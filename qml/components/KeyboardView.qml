@@ -39,9 +39,9 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: 16
-        color: "#101217"
+        color: Theme.keyBackground
         border.width: 1
-        border.color: "#262A33"
+        border.color: Theme.border
 
         Item {
             id: keys
@@ -64,7 +64,7 @@ Item {
                     radius: Math.max(4, Math.min(7, height * 0.15))
                     color: controller.frameColors[keyName] || "#171A20"
                     border.width: selected ? 2 : 1
-                    border.color: selected ? "#DCD9F2" : "#343843"
+                    border.color: selected ? Theme.accentLight : Theme.borderStrong
 
                     Behavior on color {
                         ColorAnimation { duration: 80 }
@@ -81,7 +81,7 @@ Item {
                         width: 3
                         height: 3
                         radius: 2
-                        color: "#EDEEF3"
+                        color: Theme.text
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.margins: 4
@@ -90,7 +90,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: root.pretty(keyName)
-                        color: "#E8E9EE"
+                        color: Theme.text
                         font.pixelSize: Math.max(6, Math.min(10, parent.height * 0.22))
                         font.weight: Font.Medium
                     }

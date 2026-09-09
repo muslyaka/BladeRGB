@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Dialogs
 import "../components"
 
 Item {
@@ -91,7 +90,7 @@ Item {
 
                         Text {
                             text: "Стек слоёв"
-                            color: "#E4E6EC"
+                            color: Theme.text
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -100,7 +99,7 @@ Item {
 
                         Text {
                             text: "снизу → вверх"
-                            color: "#6F7582"
+                            color: Theme.textSubtle
                             font.pixelSize: 9
                         }
                     }
@@ -117,9 +116,9 @@ Item {
                             width: ListView.view.width
                             height: 70
                             radius: 10
-                            color: root.selectedId === modelData.id ? "#22252E" : "#1B1E25"
+                            color: root.selectedId === modelData.id ? "#22252E" : Theme.panelAlt
                             border.width: 1
-                            border.color: root.selectedId === modelData.id ? "#57538B" : "#282C35"
+                            border.color: root.selectedId === modelData.id ? "#57538B" : Theme.border
 
                             MouseArea {
                                 anchors.fill: parent
@@ -145,7 +144,7 @@ Item {
 
                                     Text {
                                         text: modelData.name
-                                        color: "#E8E9EE"
+                                        color: Theme.text
                                         font.pixelSize: 11
                                         font.weight: Font.DemiBold
                                         elide: Text.ElideRight
@@ -166,7 +165,7 @@ Item {
                                             )
                                             + " · "
                                             + controller.uiLabel("blend", modelData.blend_mode)
-                                        color: "#747A87"
+                                        color: Theme.textSubtle
                                         font.pixelSize: 9
                                         elide: Text.ElideRight
                                     }
@@ -174,7 +173,7 @@ Item {
 
                                 Text {
                                     text: Math.round(modelData.opacity * 100) + "%"
-                                    color: "#9B9FAC"
+                                    color: Theme.textMuted
                                     font.pixelSize: 9
                                     font.weight: Font.DemiBold
                                 }
@@ -218,7 +217,7 @@ Item {
 
                         Text {
                             text: root.selectedLayer ? "Параметры слоя" : "Выберите слой"
-                            color: "#E4E6EC"
+                            color: Theme.text
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                         }
@@ -228,7 +227,7 @@ Item {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             text: "Нажмите на слой слева, чтобы изменить его источник, наложение, маску и параметры движения."
-                            color: "#777D8A"
+                            color: Theme.textMuted
                             font.pixelSize: 10
                             lineHeight: 1.35
                         }
@@ -337,13 +336,12 @@ Item {
                             AppButton {
                                 Layout.fillWidth: true
                                 text: "Выбрать цвет слоя"
-                                onClicked: layerColorDialog.open()
+                                onClicked: layerColorPicker.openFor(controller.layerColor(root.selectedId))
                             }
 
-                            ColorDialog {
-                                id: layerColorDialog
-                                title: "Цвет слоя"
-                                onAccepted: controller.setLayerField(root.selectedId, "color", selectedColor.toString())
+                            RGBWPicker {
+                                id: layerColorPicker
+                                onColorEdited: function(hex) { controller.setLayerField(root.selectedId, "color", hex) }
                             }
                         }
                     }

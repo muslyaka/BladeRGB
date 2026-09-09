@@ -4,5 +4,7 @@
   "auto_profiles": true,
   "transition_ms": 650,
   "hotkeys_enabled": true,
-  "last_profile": ""
+  "last_profile": "",
+  "theme": "dark",
+  "accent_color": "#7772C9"
 }
