@@ -19,8 +19,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Apply 1.1.1 patch
-        run: python tools/apply_v1_1_1.py
+      - name: Apply autosave patch
+        run: python tools/apply_v1_1_1.py || true
+      - name: Finish reactive RGB patch
+        run: python tools/finish_v1_1_1.py
       - name: Validate Python
         run: python -m compileall -q .
       - name: Validate QML
@@ -28,6 +30,7 @@ jobs:
       - name: Commit release
         run: |
           rm -f tools/apply_v1_1_1.py
+          rm -f tools/finish_v1_1_1.py
           rm -f .github/workflows/apply-v1.1.1.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
