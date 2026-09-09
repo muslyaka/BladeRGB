@@ -16,3 +16,5 @@ jobs:
         run: python -m compileall -q .
       - name: QML sanity
         run: python qml_sanity.py
+      - name: Palette timing tests
+        run: python test_palette_timing.py
