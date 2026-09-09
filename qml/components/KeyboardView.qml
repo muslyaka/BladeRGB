@@ -8,6 +8,9 @@ Item {
     property var selectedKeys: ({})
     signal selectionChanged(var keys)
 
+    readonly property real logicalWidth: 23.0
+    readonly property real logicalHeight: 6.35
+
     function pretty(n) {
         var a = {
             "BACKSPACE":"BKSP",
@@ -44,82 +47,125 @@ Item {
         border.color: Theme.border
 
         Item {
-            id: keys
+            id: viewport
             anchors.fill: parent
             anchors.margins: 18
 
-            Repeater {
-                model: controller.keyboardLayout
+            readonly property real scaleFactor: Math.min(
+                width / root.logicalWidth,
+                height / root.logicalHeight
+            )
 
-                delegate: Rectangle {
-                    required property var modelData
-                    property string keyName: modelData.name
-                    property bool selected: root.selectedKeys[keyName] === true
-                    property bool painted: controller.paintedColors[keyName] !== undefined
+            readonly property real boardWidth:
+                root.logicalWidth * scaleFactor
+            readonly property real boardHeight:
+                root.logicalHeight * scaleFactor
 
-                    x: Number(modelData.x) / 23.0 * keys.width
-                    y: Number(modelData.y) / 6.35 * keys.height
-                    width: Number(modelData.w) / 23.0 * keys.width - 3
-                    height: Number(modelData.h) / 6.35 * keys.height - 3
-                    radius: Math.max(4, Math.min(7, height * 0.15))
-                    color: controller.frameColors[keyName] || "#171A20"
-                    border.width: selected ? 2 : 1
-                    border.color: selected ? Theme.accentLight : Theme.borderStrong
+            Item {
+                id: keys
+                width: viewport.boardWidth
+                height: viewport.boardHeight
+                anchors.centerIn: parent
 
-                    Behavior on color {
-                        ColorAnimation { duration: 80 }
-                    }
+                Repeater {
+                    model: controller.keyboardLayout
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: "#0BFFFFFF"
-                    }
+                    delegate: Rectangle {
+                        required property var modelData
+                        property string keyName: modelData.name
+                        property bool selected:
+                            root.selectedKeys[keyName] === true
+                        property bool painted:
+                            controller.paintedColors[keyName] !== undefined
 
-                    Rectangle {
-                        visible: painted
-                        width: 3
-                        height: 3
-                        radius: 2
-                        color: Theme.text
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.margins: 4
-                    }
+                        readonly property real unit:
+                            viewport.scaleFactor
+                        readonly property real gap:
+                            Math.max(2.0, Math.min(4.0, unit * 0.10))
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.pretty(keyName)
-                        color: Theme.text
-                        font.pixelSize: Math.max(6, Math.min(10, parent.height * 0.22))
-                        font.weight: Font.Medium
-                    }
+                        x: Number(modelData.x) * unit
+                        y: Number(modelData.y) * unit
+                        width: Math.max(
+                            6,
+                            Number(modelData.w) * unit - gap
+                        )
+                        height: Math.max(
+                            6,
+                            Number(modelData.h) * unit - gap
+                        )
+                        radius: Math.max(
+                            4,
+                            Math.min(8, height * 0.16)
+                        )
+                        color: controller.frameColors[keyName] || Theme.panelAlt
+                        border.width: selected ? 2 : 1
+                        border.color: selected
+                            ? Theme.accentLight
+                            : Theme.borderStrong
 
-                    MouseArea {
-                        anchors.fill: parent
-                        enabled: root.interactive
-                        hoverEnabled: true
-                        cursorShape: root.tool === "Brush"
-                            ? Qt.CrossCursor
-                            : root.tool === "Eraser"
-                                ? Qt.ForbiddenCursor
-                                : Qt.PointingHandCursor
+                        Behavior on color {
+                            ColorAnimation { duration: 80 }
+                        }
 
-                        onClicked: {
-                            if (root.tool === "Brush") {
-                                controller.paintKey(keyName, root.paintColor)
-                            } else if (root.tool === "Eraser") {
-                                controller.eraseKey(keyName)
-                            } else {
-                                var next = {}
-                                for (var k in root.selectedKeys)
-                                    next[k] = root.selectedKeys[k]
-                                if (next[keyName] === true)
-                                    delete next[keyName]
-                                else
-                                    next[keyName] = true
-                                root.selectedKeys = next
-                                root.selectionChanged(next)
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: parent.radius
+                            color: "#0BFFFFFF"
+                        }
+
+                        Rectangle {
+                            visible: painted
+                            width: 4
+                            height: 4
+                            radius: 2
+                            color: Theme.text
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 4
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.pretty(keyName)
+                            color: Theme.text
+                            font.pixelSize: Math.max(
+                                6,
+                                Math.min(10, parent.height * 0.24)
+                            )
+                            font.weight: Font.Medium
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: root.interactive
+                            hoverEnabled: true
+                            cursorShape: root.tool === "Brush"
+                                ? Qt.CrossCursor
+                                : root.tool === "Eraser"
+                                    ? Qt.ForbiddenCursor
+                                    : Qt.PointingHandCursor
+
+                            onClicked: {
+                                if (root.tool === "Brush") {
+                                    controller.paintKey(
+                                        keyName,
+                                        root.paintColor
+                                    )
+                                } else if (root.tool === "Eraser") {
+                                    controller.eraseKey(keyName)
+                                } else {
+                                    var next = {}
+                                    for (var k in root.selectedKeys)
+                                        next[k] = root.selectedKeys[k]
+
+                                    if (next[keyName] === true)
+                                        delete next[keyName]
+                                    else
+                                        next[keyName] = true
+
+                                    root.selectedKeys = next
+                                    root.selectionChanged(next)
+                                }
                             }
                         }
                     }
