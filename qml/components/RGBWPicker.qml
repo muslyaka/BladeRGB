@@ -4,18 +4,31 @@ import QtQuick.Layouts
 
 Popup {
     id: root
-    width: 348
-    height: 438
+    // Popups declared inside palette delegates must use window coordinates.
+    // Otherwise the wheel can open beyond the visible application area.
+    parent: Overlay.overlay
+    width: parent ? Math.min(362, parent.width - 32) : 362
+    height: parent ? Math.min(462, parent.height - 32) : 462
+    x: Math.round((parent.width - width) / 2)
+    y: Math.round((parent.height - height) / 2)
+    margins: 16
     modal: true
     focus: true
-    padding: 16
+    padding: 18
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+    Overlay.modal: Rectangle { color: "#99000000" }
 
     property real hue: 0.0
     property real saturation: 0.0
     property real brightness: 1.0
     property string currentHex: "#ffffff"
     signal colorEdited(string colorHex)
+
+    onOpened: hexInput.text = currentHex
+    onCurrentHexChanged: {
+        if (hexInput) hexInput.text = currentHex
+    }
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)) }
 
@@ -66,9 +79,9 @@ Popup {
     }
 
     function openFor(hex) {
-        var value = String(hex || "#ffffff")
-        if (value.length === 9) value = "#" + value.slice(3)
-        if (value.length !== 7) value = "#ffffff"
+        var value = String(hex || "#ffffff").trim()
+        if (/^#[0-9a-fA-F]{8}$/.test(value)) value = "#" + value.slice(3)
+        if (!/^#[0-9a-fA-F]{6}$/.test(value)) value = "#ffffff"
         var r = parseInt(value.slice(1, 3), 16)
         var g = parseInt(value.slice(3, 5), 16)
         var b = parseInt(value.slice(5, 7), 16)
@@ -79,6 +92,21 @@ Popup {
         currentHex = hsvHex(hue, saturation, brightness)
         open()
         wheel.requestPaint()
+    }
+
+    // Exact HEX input is useful for matching lighting profiles precisely.
+    function setHex(value) {
+        var hex = String(value).trim()
+        if (/^[0-9a-fA-F]{6}$/.test(hex)) hex = "#" + hex
+        if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return false
+        var hsv = rgbHsv(parseInt(hex.slice(1, 3), 16),
+                         parseInt(hex.slice(3, 5), 16),
+                         parseInt(hex.slice(5, 7), 16))
+        hue = hsv[0]
+        saturation = hsv[1]
+        brightness = hsv[2]
+        emitCurrent()
+        return true
     }
 
     function emitCurrent() {
@@ -103,24 +131,24 @@ Popup {
             Column {
                 spacing: 2
                 Text {
-                    text: "RGBW"
+                    text: "Выбор цвета"
                     color: Theme.text
                     font.pixelSize: 15
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: "цвет по краю · белый в центре"
+                    text: "Оттенок по краю · белый в центре"
                     color: Theme.textMuted
-                    font.pixelSize: 9
+                    font.pixelSize: 10
                 }
             }
 
             Item { Layout.fillWidth: true }
 
             Rectangle {
-                width: 42
-                height: 30
-                radius: 9
+                width: 50
+                height: 34
+                radius: 10
                 color: root.currentHex
                 border.width: 1
                 border.color: Theme.borderStrong
@@ -130,8 +158,8 @@ Popup {
         Item {
             id: wheelBox
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 286
-            Layout.preferredHeight: 286
+            Layout.preferredWidth: Math.min(282, root.availableWidth)
+            Layout.preferredHeight: width
 
             Canvas {
                 id: wheel
@@ -164,10 +192,10 @@ Popup {
             }
 
             Rectangle {
-                width: 16
-                height: 16
-                radius: 8
-                color: "transparent"
+                width: 18
+                height: 18
+                radius: 9
+                color: root.currentHex
                 border.width: 3
                 border.color: Theme.light ? "#22252B" : "#FFFFFF"
                 x: wheelBox.width / 2
@@ -253,11 +281,26 @@ Popup {
 
         RowLayout {
             Layout.fillWidth: true
-            Text {
+            TextField {
+                id: hexInput
+                Layout.preferredWidth: 110
+                Layout.preferredHeight: 32
                 text: root.currentHex
-                color: Theme.textMuted
-                font.pixelSize: 10
+                maximumLength: 7
+                selectByMouse: true
+                horizontalAlignment: TextInput.AlignHCenter
+                color: Theme.text
+                font.pixelSize: 11
                 font.weight: Font.DemiBold
+                onEditingFinished: {
+                    if (!root.setHex(text)) text = root.currentHex
+                }
+                background: Rectangle {
+                    radius: 8
+                    color: Theme.input
+                    border.width: 1
+                    border.color: hexInput.activeFocus ? Theme.accent : Theme.border
+                }
             }
             Item { Layout.fillWidth: true }
             AppButton {

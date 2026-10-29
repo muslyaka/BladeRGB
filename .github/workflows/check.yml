@@ -18,3 +18,5 @@ jobs:
         run: python qml_sanity.py
       - name: Palette timing tests
         run: python test_palette_timing.py
+      - name: Runtime regression tests
+        run: python test_runtime_regressions.py

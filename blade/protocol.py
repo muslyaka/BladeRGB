@@ -51,8 +51,13 @@ def write_frame(device, frame, inter_report_delay=0.001):
     total = 0
     for page in range(REPORT_COUNT):
         s = page * REPORT_SIZE
-        written = device.write(frame[s:s+REPORT_SIZE])
-        total += int(written or 0)
+        written = int(device.write(frame[s:s+REPORT_SIZE]) or 0)
+        if written != REPORT_SIZE:
+            raise OSError(
+                f"Не удалось отправить HID-отчёт {page + 1}/{REPORT_COUNT}: "
+                f"записано {written} из {REPORT_SIZE} байт"
+            )
+        total += written
         if inter_report_delay and page < REPORT_COUNT-1:
             time.sleep(inter_report_delay)
     return total

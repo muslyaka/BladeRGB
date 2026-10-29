@@ -295,8 +295,10 @@ Flickable {
                                 height: 42
                                 radius: 10
                                 color: modelData
-                                border.width: 1
-                                border.color: Theme.borderStrong
+                                border.width: swatchMouse.containsMouse ? 2 : 1
+                                border.color: swatchMouse.containsMouse ? Theme.accentLight : Theme.borderStrong
+
+                                Behavior on border.color { ColorAnimation { duration: 130 } }
 
                                 Rectangle {
                                     anchors.fill: parent
@@ -308,10 +310,15 @@ Flickable {
                                 }
 
                                 MouseArea {
+                                    id: swatchMouse
                                     anchors.fill: parent
+                                    hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: picker.openFor(modelData)
                                 }
+
+                                ToolTip.visible: swatchMouse.containsMouse
+                                ToolTip.text: "Цвет " + (index + 1) + " · " + modelData.toUpperCase()
 
                                 RGBWPicker {
                                     id: picker

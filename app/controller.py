@@ -232,11 +232,20 @@ class BladeController(QObject):
     @Slot()
     @Slot(bool)
     def connectDevice(self, silent=False):
+        # A real reconnect must discard the old HID handle, not return early
+        # merely because the handle still exists.
+        was_running = self.renderer.running
         try:
-            self.device.connect(); self.device.enable_manual_mode(); self._last_error=""
+            if was_running: self.renderer.stop()
+            self.device.close()
+            self.device.connect()
+            self.device.enable_manual_mode()
+            if was_running: self.renderer.start()
+            self.renderer.last_error = None
+            self._last_error = ""
             if not silent: self.toast.emit("Клавиатура подключена", "ARDOR BLADE готова к управлению подсветкой.")
         except Exception as exc:
-            self._last_error=f"{type(exc).__name__}: {exc}"
+            self._last_error = f"{type(exc).__name__}: {exc}"
             if not silent: self.toast.emit("Ошибка подключения", self._last_error)
         self.stateChanged.emit()
     @Slot()
@@ -459,7 +468,16 @@ class BladeController(QObject):
     def unbindApp(self, exe): self.bindings.unbind(exe); self.bindingListChanged.emit()
     @Slot(bool)
     def setAutoProfilesEnabled(self, value):
-        value=bool(value); self.settings.set("auto_profiles",value); self.bindings.enabled=value; self.bindings.save(); self.stateChanged.emit()
+        value = bool(value)
+        if not value and self._auto_profile_active:
+            if self._manual_state_before_auto is not None:
+                self.apply_state(self._manual_state_before_auto)
+            self._manual_state_before_auto = None
+            self._auto_profile_active = ""
+        self.settings.set("auto_profiles", value)
+        self.bindings.enabled = value
+        self.bindings.save()
+        self.stateChanged.emit()
     @Slot(bool)
     def setCloseToTray(self, value): self.settings.set("close_to_tray",bool(value)); self.stateChanged.emit()
     @Slot(bool)

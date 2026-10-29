@@ -6,8 +6,11 @@ Button {
     property string glyph: "•"
     implicitHeight: 44
     background: Rectangle {
-        radius: 9
+        radius: 10
         color: root.selected ? Theme.accentSoft : root.hovered ? Theme.hover : "transparent"
+        border.width: root.selected ? 1 : 0
+        border.color: Theme.accentSoft
+        Behavior on color { ColorAnimation { duration: 130 } }
         Rectangle {
             visible: root.selected
             width: 3
