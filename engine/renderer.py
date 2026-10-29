@@ -130,16 +130,24 @@ class Renderer:
     def start(self):
         if self.running: return
         if not self.device.connected: self.device.connect()
+        self.last_error = None
         self.device.enable_manual_mode(); self.reactive.start(); self.sync_audio_state(); self._stop.clear(); self.running=True
         self._thread=threading.Thread(target=self._loop,name='BladeRGB-Renderer',daemon=True); self._thread.start()
     def stop(self):
         self._stop.set()
         if self._thread and self._thread.is_alive(): self._thread.join(timeout=2)
-        self._thread=None; self.running=False; self.audio.stop(); self.reactive.stop()
+        self._thread=None; self.running=False; self.actual_fps=0.0; self.audio.stop(); self.reactive.stop()
     def blackout(self):
+        # Stop sending frames first; otherwise the very next frame relights
+        # the keyboard and makes the Blackout action appear broken.
+        self.stop()
         if not self.device.connected: self.device.connect()
-        self.device.enable_manual_mode(); self.device.blackout()
-        with self._lock: self.last_colors={k:(0,0,0) for k in KEY_OFFSETS}
+        self.device.enable_manual_mode()
+        self.device.blackout()
+        with self._lock:
+            self.last_colors={k:(0,0,0) for k in KEY_OFFSETS}
+            self._transition_from=None
+            self._previous_colors=None
     def snapshot(self):
         with self._lock: return dict(self.last_colors)
     def begin_transition(self, duration=None):
@@ -315,3 +323,7 @@ class Renderer:
             self.last_error=f'{type(e).__name__}: {e}'
         finally:
             self.running=False
+            self.actual_fps=0.0
+            # Also release listeners if rendering ended due to an HID error.
+            self.audio.stop()
+            self.reactive.stop()
